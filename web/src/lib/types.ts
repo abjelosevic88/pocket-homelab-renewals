@@ -13,7 +13,7 @@ export type Settings = ConnFields & {
   title: string; date_format: string; time_format: string; week_start: number; currency: string; soon_days: number
   notify_reminders: boolean; notify_expired: boolean; notify_found: boolean; notify_hour: number
   notify_url: string; notify_format: string; notify_configured: boolean
-  auto_documents: boolean; scan_weekly: boolean; scan_sources: Record<string, boolean>; documents_ai: boolean; email_days: number; travel_months: number
+  live: boolean; scan_nightly: boolean; scan_sources: Record<string, boolean>; documents_ai: boolean; email_days: number; travel_months: number
   money_book: boolean; money_account_id: number; money_category_id: number
   calendar_sync: boolean; calendar_id: number
   ai_provider: 'auto' | 'pocket' | 'openai'; ai_pocket_model: string; openai_api_key: string; openai_model: string; openai_base_url: string
@@ -52,14 +52,14 @@ export interface Overview {
   expired: Renewal[]; soon: Renewal[]; check: Renewal[]; later: Renewal[]; recent: History[]; travel: TravelWarning[]; year_cost: Record<string, number>
 }
 
-export interface Scan { id: number; source: string; trigger: 'manual' | 'weekly' | 'event'; started_at: string; finished_at: string; looked: number; found: number; added: number; updated: number; error: string }
+export interface Scan { id: number; source: string; trigger: 'manual' | 'nightly' | 'weekly' | 'event'; started_at: string; finished_at: string; looked: number; found: number; added: number; updated: number; error: string }
 
 export interface Source {
   name: string; label: string; what: string; ai: '' | 'optional' | 'required'; app: AppSlug; mode: ConnMode; connected: boolean; detail: string
   included: boolean; running: boolean; last: Scan | null; count: number; ai_ready: boolean; open_url: string
 }
 
-export interface Sources { sources: Source[]; auto_documents: boolean; scan_weekly: boolean; documents_ai: boolean; stream: { configured: boolean; connected: boolean; error: string; last_event_at?: string } }
+export interface Sources { sources: Source[]; live: boolean; scan_nightly: boolean; documents_ai: boolean; stream: { configured: boolean; connected: boolean; error: string; last_event_at?: string } }
 
 export interface RenewalDetail { renewal: Renewal; history: History[]; reminders: number[]; next_expires: string; travel: TravelWarning[] }
 export interface MoneyResult { ok: boolean; tx_id?: number; account?: string; url?: string; via?: string; error?: string; skipped?: boolean }

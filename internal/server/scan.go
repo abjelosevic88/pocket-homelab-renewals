@@ -129,7 +129,7 @@ func (s *Server) runScan(ctx context.Context, uid int64, src scanSource, trigger
 		if err != nil {
 			rec.Error = err.Error()
 		}
-		if trigger == "event" && rec.Found == 0 && rec.Error == "" {
+		if trigger == "event" && rec.Added == 0 && rec.Updated == 0 && rec.Error == "" {
 			_ = s.store.DeleteScan(context.WithoutCancel(ctx), uid, rec.ID)
 		} else {
 			_ = s.store.FinishScan(context.WithoutCancel(ctx), uid, rec)
@@ -696,7 +696,7 @@ func (s *Server) handleSources(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, ss)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"sources": out, "auto_documents": st.AutoDocuments, "scan_weekly": st.ScanWeekly,
+	writeJSON(w, http.StatusOK, map[string]any{"sources": out, "live": st.Live, "scan_nightly": st.ScanNightly,
 		"stream": s.streamStatus(), "documents_ai": st.DocumentsAI})
 }
 
@@ -769,25 +769,24 @@ func (s *Server) handleListScans(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, list)
 }
 
-// weeklyScans looks through every included, connected app once a week per
-// person, at night.
-func (s *Server) weeklyScans(ctx context.Context) {
+// nightlyScans looks through every included, connected app once a night per
+// person, at 04:00, so whatever the live events missed is caught by morning.
+func (s *Server) nightlyScans(ctx context.Context) {
 	now := time.Now()
 	if now.Hour() != 4 || now.Minute() > 10 {
 		return
 	}
-	y, wk := now.ISOWeek()
 	ids, err := s.store.SettingsUsers(ctx)
 	if err != nil {
 		return
 	}
 	for _, uid := range ids {
-		key := fmt.Sprintf("weekly:%d:%d-%d", uid, y, wk)
+		key := fmt.Sprintf("nightly:%d:%s", uid, store.Today())
 		if _, _, done := s.store.CacheGet(ctx, key); done {
 			continue
 		}
 		st, err := s.store.GetSettings(ctx, uid)
-		if err != nil || !st.ScanWeekly {
+		if err != nil || !st.ScanNightly {
 			continue
 		}
 		_ = s.store.CachePut(ctx, key, "1")
@@ -801,7 +800,7 @@ func (s *Server) weeklyScans(ctx context.Context) {
 					continue
 				}
 				bctx, cancel := context.WithTimeout(ctx, 20*time.Minute)
-				_, _ = s.runScan(bctx, uid, src, "weekly", 0)
+				_, _ = s.runScan(bctx, uid, src, "nightly", 0)
 				cancel()
 			}
 		}(uid, u, st)

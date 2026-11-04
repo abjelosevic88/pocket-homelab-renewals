@@ -131,11 +131,11 @@ type Settings struct {
 	NotifyFormat    string `json:"notify_format"` // apprise | ntfy | json
 
 	// Finding renewals in the other apps.
-	AutoDocuments bool            `json:"auto_documents"` // a new document in Pocket Documents is read at once
-	ScanWeekly    bool            `json:"scan_weekly"`    // look through every included app once a week
-	ScanSources   map[string]bool `json:"scan_sources"`   // per source: included in "Scan everything" and the weekly scan
-	DocumentsAI   bool            `json:"documents_ai"`   // read a document's text with AI when no date field says it
-	EmailDays     int             `json:"email_days"`     // how far back the email scan looks
+	Live        bool            `json:"live"`         // new and changed items in the other apps are read at once (their events)
+	ScanNightly bool            `json:"scan_nightly"` // look through every included app every night
+	ScanSources map[string]bool `json:"scan_sources"` // per source: included in "Scan everything" and the weekly scan
+	DocumentsAI bool            `json:"documents_ai"` // read a document's text with AI when no date field says it
+	EmailDays   int             `json:"email_days"`   // how far back the email scan looks
 
 	// Pocket Money: a renewal's cost becomes a transaction.
 	MoneyBook       bool  `json:"money_book"`

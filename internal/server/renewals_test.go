@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	core "github.com/abjelosevic88/pocket-homelab-core/sdk"
 	"github.com/abjelosevic88/pocket-homelab-renewals/internal/config"
 	"github.com/abjelosevic88/pocket-homelab-renewals/internal/store"
 )
@@ -440,4 +441,32 @@ func TestUpsertFoundMovesToALaterDate(t *testing.T) {
 func nowAt(hour int) time.Time {
 	n := time.Now()
 	return time.Date(n.Year(), n.Month(), n.Day(), hour, 0, 0, 0, n.Location())
+}
+
+func TestLiveEventsRescanTheApp(t *testing.T) {
+	liveDelay = 10 * time.Millisecond
+	a := newApp(t, nil)
+	until := store.AddDays(store.Today(), 300)
+	ts := fakeSiblings(t, until)
+	a.ok(a.alice, "PUT", "/api/v1/settings", map[string]any{"home_mode": "direct", "home_url": ts.URL, "home_token": "tok-home-123456"})
+	ev := func(topic, email string) core.Event {
+		p, _ := json.Marshal(map[string]any{"user_email": email, "thing_id": 4, "name": "Dishwasher", "warranty_until": until})
+		return core.Event{ID: 1, Topic: topic, Payload: p, CreatedAt: time.Now().UTC().Format(time.RFC3339Nano)}
+	}
+	ctx := context.Background()
+	a.s.handleEvent(ctx, ev("home.something_else", "alice@example.com")) // not followed
+	a.s.handleEvent(ctx, ev("home.thing_saved", "nobody@example.com"))   // not a person here
+	a.s.handleEvent(ctx, ev("home.thing_saved", "alice@example.com"))
+	a.s.handleEvent(ctx, ev("home.thing_saved", "alice@example.com")) // joins the same scan
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if l := a.list(a.alice, "/api/v1/renewals?source=home"); len(l) == 1 {
+			if n := len(a.list(a.bob, "/api/v1/renewals")); n != 0 {
+				t.Fatalf("bob got alice's event: %d", n)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("the warranty did not arrive: %v", a.list(a.alice, "/api/v1/renewals"))
 }

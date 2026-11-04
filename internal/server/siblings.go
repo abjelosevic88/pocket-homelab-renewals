@@ -49,11 +49,11 @@ type pocketApp struct {
 
 var (
 	appDocuments  = pocketApp{"documents", "Pocket Documents", []string{scopeDocumentsRead, scopeEventsRead}, "Find expiry dates in your documents (passports, policies, warranty cards, contracts) and add each new document's date as soon as it is filed"}
-	appHome       = pocketApp{"home", "Pocket Home", []string{scopeHomeRead}, "Track when the warranties of your appliances end"}
-	appGarage     = pocketApp{"garage", "Pocket Garage", []string{scopeVehiclesRead}, "Track your vehicles' registration, inspection, insurance and other dated reminders"}
-	appInventory  = pocketApp{"inventory", "Pocket Inventory", []string{scopeItemsRead}, "Track the expiry dates of items on your shelves (first-aid kit, fire extinguisher, medicine)"}
-	appMonitoring = pocketApp{"monitoring", "Pocket Monitoring", []string{scopeMonitorRead}, "Track when the TLS certificates of the sites you monitor run out"}
-	appMoney      = pocketApp{"money", "Pocket Money", []string{scopeAccountsRead, scopeTxRead, scopeTxWrite}, "Find yearly subscriptions and payments in your transactions, and book what a renewal cost"}
+	appHome       = pocketApp{"home", "Pocket Home", []string{scopeHomeRead, scopeEventsRead}, "Track when the warranties of your appliances end, as soon as you save one"}
+	appGarage     = pocketApp{"garage", "Pocket Garage", []string{scopeVehiclesRead, scopeEventsRead}, "Track your vehicles' registration, inspection, insurance and other dated reminders, as soon as you save one"}
+	appInventory  = pocketApp{"inventory", "Pocket Inventory", []string{scopeItemsRead, scopeEventsRead}, "Track the expiry dates of items on your shelves (first-aid kit, fire extinguisher, medicine), as soon as you save one"}
+	appMonitoring = pocketApp{"monitoring", "Pocket Monitoring", []string{scopeMonitorRead, scopeEventsRead}, "Track when the TLS certificates of the sites you monitor run out, and when they are renewed"}
+	appMoney      = pocketApp{"money", "Pocket Money", []string{scopeAccountsRead, scopeTxRead, scopeTxWrite, scopeEventsRead}, "Find yearly subscriptions as soon as you add or pay one, and book what a renewal cost"}
 	appEmail      = pocketApp{"email", "Pocket Email", []string{scopeMailRead}, "Find renewal notices in your email (\"your domain expires\", \"your policy renews\")"}
 	appTravel     = pocketApp{"travel", "Pocket Travel", []string{scopeTripsRead}, "Warn you when a passport or ID runs out before or soon after a trip"}
 	appCalendar   = pocketApp{"calendar", "Pocket Calendar", []string{scopeCalendarRead, scopeCalendarWrite}, "Put expiry dates on your calendar as all-day events, and move them when you renew"}

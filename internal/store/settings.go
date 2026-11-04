@@ -16,7 +16,7 @@ var boxKeys = map[string]bool{"title": true, "setup_complete": true}
 func (s *Store) defaults() Settings {
 	return Settings{Title: DefaultTitle, DateFormat: "auto", TimeFormat: "auto", WeekStart: 1, Currency: "EUR", SoonDays: 90,
 		NotifyReminders: true, NotifyExpired: true, NotifyFound: true, NotifyHour: s.NotifyHour, NotifyFormat: "apprise",
-		AutoDocuments: true, ScanWeekly: true, ScanSources: map[string]bool{}, DocumentsAI: true, EmailDays: 365,
+		Live: true, ScanNightly: true, ScanSources: map[string]bool{}, DocumentsAI: true, EmailDays: 365,
 		MoneyBook: false, TravelMonths: 6, Conns: map[string]Conn{}, AIProvider: "auto"}
 }
 

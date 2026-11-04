@@ -25,7 +25,8 @@
 - **Found in your other apps**, marked “Check” until you look:
   - **Pocket Documents** — the “Valid until” and other date fields, or (with AI) the text of passports, policies, contracts and warranty cards; a new document is read **within seconds of being filed**.
   - **Pocket Home** — appliance warranties. **Pocket Garage** — registration, inspection, insurance and vignette reminders, vehicle papers with an end date. **Pocket Inventory** — things with an expiry date that are not food. **Pocket Monitoring** — TLS certificates. **Pocket Money** — yearly subscriptions. **Pocket Email** — renewal notices, read by AI.
-  - Nothing is added twice; a later date there moves it on here; what you delete stays deleted. A weekly scan keeps it all current.
+  - Nothing is added twice; a later date there moves it on here; what you delete stays deleted.
+  - **As it happens**: a new document, appliance warranty, vehicle reminder or paper, item, subscription or renewed certificate shows up seconds after you save it (Core events), and a nightly scan catches anything else.
 - **Before you travel**: a passport, ID or visa that runs out before a trip in Pocket Travel ends — or within the six months many countries ask for — shows on the overview.
 - **The rest of the box**: dates on your Pocket Calendar, “renew it” on your Pocket Tasks, the scan kept from Pocket Documents, who to call from Pocket Contacts. Pocket AI can answer “what runs out this month?”.
 - Per person: everyone has their own list and connections; admins do not see anyone else's. Light and dark, phone first, a JSON export/import and a CSV of the list.
@@ -49,11 +50,11 @@ Set `CORE_URL` and `CORE_REGISTRATION_KEY` and Renewals joins the box: people si
 | App | What for | Scopes |
 |---|---|---|
 | Pocket Documents | end dates in your documents, new documents as they are filed, the scan kept with a renewal | `documents:read`, `events:read` |
-| Pocket Home | appliance warranties | `home:read` |
-| Pocket Garage | registration, inspection, insurance reminders and vehicle papers | `vehicles:read` |
-| Pocket Inventory | expiry dates on your shelves | `items:read` |
-| Pocket Monitoring | TLS certificates | `monitoring:read` |
-| Pocket Money | yearly subscriptions; what a renewal cost, as a transaction | `accounts:read`, `transactions:read`, `transactions:write` |
+| Pocket Home | appliance warranties | `home:read`, `events:read` |
+| Pocket Garage | registration, inspection, insurance reminders and vehicle papers | `vehicles:read`, `events:read` |
+| Pocket Inventory | expiry dates on your shelves | `items:read`, `events:read` |
+| Pocket Monitoring | TLS certificates | `monitoring:read`, `events:read` |
+| Pocket Money | yearly subscriptions; what a renewal cost, as a transaction | `accounts:read`, `transactions:read`, `transactions:write`, `events:read` |
 | Pocket Email | renewal notices (with AI) | `mail:read` |
 | Pocket Travel | passports and visas against your trips | `trips:read` |
 | Pocket Calendar | the dates as all-day events | `calendar:read`, `calendar:write` |

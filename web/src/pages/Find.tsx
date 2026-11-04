@@ -1,5 +1,5 @@
 // Find in my apps: the Pocket apps renewals are found in, each with its connection, a switch and "Scan now";
-// new documents read as they are filed; the weekly scan; what was looked at lately.
+// new and changed items read as they are saved; the nightly scan; what was looked at lately.
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, V1 } from '../lib/api'
@@ -58,15 +58,15 @@ export default function Find() {
       {!coreOn && <div className="callout info"><Icon name="info" size={15} /><div>Without Pocket Core each app is connected with a URL and a token under Settings → Connected apps.<CoreHint /></div></div>}
 
       <Card title="As it happens" sub="No need to scan for these">
-        <SettingRow title="New documents" help={<>A document filed in Pocket Documents is read within seconds: a passport, a policy or a warranty card shows up here by itself.{' '}
-          {!coreOn ? 'Needs Pocket Core.' : !docs?.connected ? `First connect Pocket Documents: ${docs?.detail || 'Settings → Connected apps'}.` : data.stream.connected ? (data.stream.last_event_at ? `Last document ${ago(data.stream.last_event_at)}.` : 'Listening.') : `Not listening yet${data.stream.error ? `: ${data.stream.error}` : ''}.`}</>}>
-          <Switch checked={data.auto_documents && coreOn} disabled={!coreOn} onChange={v => save({ auto_documents: v })} label="New documents" />
+        <SettingRow title="As soon as you save something" help={<>A document filed in Pocket Documents is read within seconds; an appliance's warranty in Pocket Home, a reminder or paper in Pocket Garage, an item in Pocket Inventory, a subscription in Pocket Money or a renewed certificate in Pocket Monitoring shows up a few seconds after you save it. Each app needs its “events:read” link on in Pocket Core → Links.{' '}
+          {!coreOn ? 'Needs Pocket Core.' : data.stream.connected ? (data.stream.last_event_at ? `Last change ${ago(data.stream.last_event_at)}.` : 'Listening.') : `Not listening yet${data.stream.error ? `: ${data.stream.error}` : ''}.`}</>}>
+          <Switch checked={data.live && coreOn} disabled={!coreOn} onChange={v => save({ live: v })} label="As it happens" />
         </SettingRow>
         <SettingRow title="Read the text with AI" help={docs?.ai_ready ? 'When a document has no “Valid until” or other date field, AI reads its text for an end date (passports, policies, contracts only). What it finds is always marked “Check”.' : <>No AI is set up: only date fields are read. <Link to="/settings/ai">Settings → AI</Link></>}>
           <Switch checked={data.documents_ai && !!docs?.ai_ready} disabled={!docs?.ai_ready} onChange={v => save({ documents_ai: v })} label="AI for documents" />
         </SettingRow>
-        <SettingRow title="Every week" help="Looks through every app switched on below once a week, at night, so dates that changed there move on here.">
-          <Switch checked={data.scan_weekly} onChange={v => save({ scan_weekly: v })} label="Weekly scan" />
+        <SettingRow title="Every night" help="Looks through every app switched on below at 4 in the morning, so anything the live updates missed is here by the time you wake up.">
+          <Switch checked={data.scan_nightly} onChange={v => save({ scan_nightly: v })} label="Nightly scan" />
         </SettingRow>
       </Card>
 
@@ -78,7 +78,7 @@ export default function Find() {
         <div className="list">{scans.slice(0, 12).map(sc => (
           <div key={sc.id} className="list-row">
             <span className={`list-ico ${sc.error ? 'st-soon' : sc.added ? 'st-ok' : ''}`}><Icon name={SOURCE_ICON[sc.source] || 'layers'} size={16} /></span>
-            <span className="grow row-main"><span className="row-title">{SOURCE_NAME[sc.source] || sc.source}<span className="muted small"> · {sc.trigger === 'event' ? 'a new document' : sc.trigger === 'weekly' ? 'weekly' : 'by hand'}</span></span>
+            <span className="grow row-main"><span className="row-title">{SOURCE_NAME[sc.source] || sc.source}<span className="muted small"> · {sc.trigger === 'event' ? 'as it happened' : sc.trigger === 'nightly' ? 'at night' : sc.trigger === 'weekly' ? 'weekly' : 'by hand'}</span></span>
               <span className={`small ${sc.error ? 'warn-text' : 'muted'}`}>{scanText(sc)}</span></span>
             <span className="muted small hide-xs">{fmtDateTime(sc.started_at)}</span>
           </div>))}</div>

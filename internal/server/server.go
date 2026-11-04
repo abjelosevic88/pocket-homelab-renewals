@@ -36,6 +36,7 @@ type Server struct {
 	moneyMu sync.Mutex // Pocket Money bookings are serialized
 	scanMu  sync.Mutex // per person: one scan of a source at a time
 	scans   map[string]bool
+	pending map[string]bool // live rescans waiting to start
 
 	streamMu  sync.Mutex // the Pocket Core event stream (new documents)
 	streamOK  bool
@@ -63,7 +64,7 @@ func New(cfg *config.Config, st *store.Store, log *slog.Logger, webFS fs.FS) *Se
 	st.NotifyHour = cfg.NotifyHour
 	return &Server{cfg: cfg, store: st, log: log, webFS: webFS, started: time.Now(), oidc: &oidcProvider{},
 		core:     core.New(cfg.CoreURL, core.Options{DB: st.DB, TokenFile: cfg.DataDir + "/core.token", UserAgent: cfg.UserAgent}),
-		resolved: map[string]resolvedURL{}, scans: map[string]bool{}}
+		resolved: map[string]resolvedURL{}, scans: map[string]bool{}, pending: map[string]bool{}}
 }
 
 // Bootstrap seeds the first admin (if configured), the owner's integration
@@ -155,7 +156,7 @@ func (s *Server) ownerReady(ctx context.Context, owner int64) error {
 }
 
 // janitor runs the background work: every minute the daily reminders (at
-// each person's own hour) and the weekly scan, every ten minutes the
+// each person's own hour) and the nightly scan, every ten minutes the
 // calendar events of renewals that changed.
 func (s *Server) janitor(ctx context.Context) {
 	first := time.NewTimer(20 * time.Second)
@@ -171,7 +172,7 @@ func (s *Server) janitor(ctx context.Context) {
 			s.syncAllCalendars(ctx)
 		case <-minute.C:
 			s.pushes(ctx)
-			s.weeklyScans(ctx)
+			s.nightlyScans(ctx)
 		case <-ten.C:
 			s.syncAllCalendars(ctx)
 			_ = s.store.PurgeSessions(ctx)

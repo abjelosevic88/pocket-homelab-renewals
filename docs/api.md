@@ -31,7 +31,7 @@ JSON over HTTP at `/api/v1`. Authenticate with the session cookie, a personal to
 
 | Call | What |
 |---|---|
-| `GET /sources` | Each source (documents, home, garage, inventory, monitoring, money, email) with its connection, `included`, `running`, `last` scan and how many renewals came from it; plus `auto_documents`, `scan_weekly`, `documents_ai` and the event `stream` status |
+| `GET /sources` | Each source (documents, home, garage, inventory, monitoring, money, email) with its connection, `included`, `running`, `last` scan and how many renewals came from it; plus `live`, `scan_nightly`, `documents_ai` and the event `stream` status |
 | `POST /scan` | `{source: "home"}` or `{source: "all"}` (every included, connected source) — runs in the background (202); poll `/sources` |
 | `GET /scans` | The last 50 scans |
 | `GET /dismissed`, `POST /dismissed/restore` | Found and deleted (never added again); `{source_ref}` or `{all: true}` allows them again |
@@ -46,6 +46,8 @@ What each source reads:
 - **Pocket Money** (`transactions:read`): `GET /subscriptions` → yearly (or every 3+ months) ones, and any with an `end_date`.
 - **Pocket Email** (`mail:read`): subjects like “expires”, “renewal”, “ističe” in the last year, read by AI.
 
+Live: with each app's `events:read` link on, these events are followed over Core's stream — `documents.processed`, `documents.updated` (that one document is read), `home.thing_saved`, `garage.reminder_saved`, `garage.document_saved`, `inventory.item_created`, `inventory.item_updated`, `money.subscription_saved`, `money.subscription_paid`, `monitoring.cert_changed` (a quick scan of that app for that person, a few seconds later). A nightly scan at 04:00 catches the rest.
+
 Everything found is added with `needs_check: true`, `source`, `source_ref`, `source_url` (open it there) and `found_by`. A later date in the source moves the renewal on (with a history entry); an earlier one never moves it back.
 
 ## The rest
@@ -56,6 +58,6 @@ Everything found is added with `needs_check: true`, `source`, `source_ref`, `sou
 
 Renewals offers `renewals:read` (overview, due, day, search, travel, kinds, holders, renewals, history) and `renewals:write` (`POST /renewals`, `PUT/DELETE /renewals/{id}` and `POST /renewals/{id}/renew` for what that app added). Everything else answers 403 to a link token.
 
-It uses Pocket Documents (`documents:read`, `events:read`), Pocket Home (`home:read`), Pocket Garage (`vehicles:read`), Pocket Inventory (`items:read`), Pocket Monitoring (`monitoring:read`), Pocket Money (`accounts:read`, `transactions:read`, `transactions:write`), Pocket Email (`mail:read`), Pocket Travel (`trips:read`), Pocket Calendar (`calendar:read`, `calendar:write`), Pocket Tasks (`tasks:write`), Pocket Contacts (`contacts:read`) and Pocket AI inference.
+It uses Pocket Documents (`documents:read`, `events:read`), Pocket Home (`home:read`, `events:read`), Pocket Garage (`vehicles:read`, `events:read`), Pocket Inventory (`items:read`, `events:read`), Pocket Monitoring (`monitoring:read`, `events:read`), Pocket Money (`accounts:read`, `transactions:read`, `transactions:write`, `events:read`), Pocket Email (`mail:read`), Pocket Travel (`trips:read`), Pocket Calendar (`calendar:read`, `calendar:write`), Pocket Tasks (`tasks:write`), Pocket Contacts (`contacts:read`) and Pocket AI inference.
 
 Events, each with `user_email`: `renewals.added`, `renewals.found` (added from another app), `renewals.due` (a reminder day), `renewals.expired`, `renewals.renewed` (also when it renewed by itself).

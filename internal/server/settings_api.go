@@ -40,7 +40,7 @@ func (s *Server) publicSettings(ctx context.Context, u *store.User, st store.Set
 		"currency": st.Currency, "soon_days": st.SoonDays,
 		"notify_reminders": st.NotifyReminders, "notify_expired": st.NotifyExpired, "notify_found": st.NotifyFound, "notify_hour": st.NotifyHour,
 		"notify_url": st.NotifyURL, "notify_format": st.NotifyFormat, "notify_configured": st.NotifyURL != "",
-		"auto_documents": st.AutoDocuments, "scan_weekly": st.ScanWeekly, "scan_sources": st.ScanSources, "documents_ai": st.DocumentsAI,
+		"live": st.Live, "scan_nightly": st.ScanNightly, "scan_sources": st.ScanSources, "documents_ai": st.DocumentsAI,
 		"email_days": st.EmailDays, "travel_months": st.TravelMonths,
 		"money_book": st.MoneyBook, "money_account_id": st.MoneyAccountID, "money_category_id": st.MoneyCategoryID,
 		"calendar_sync": st.CalendarSync, "calendar_id": st.CalendarID,
@@ -174,8 +174,8 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 	boolIn("notify_reminders", &cur.NotifyReminders, in.NotifyReminders)
 	boolIn("notify_expired", &cur.NotifyExpired, in.NotifyExpired)
 	boolIn("notify_found", &cur.NotifyFound, in.NotifyFound)
-	boolIn("auto_documents", &cur.AutoDocuments, in.AutoDocuments)
-	boolIn("scan_weekly", &cur.ScanWeekly, in.ScanWeekly)
+	boolIn("live", &cur.Live, in.Live)
+	boolIn("scan_nightly", &cur.ScanNightly, in.ScanNightly)
 	boolIn("documents_ai", &cur.DocumentsAI, in.DocumentsAI)
 	text("notify_url", &cur.NotifyURL, in.NotifyURL)
 	if keys["notify_format"] && in.NotifyFormat != "" {

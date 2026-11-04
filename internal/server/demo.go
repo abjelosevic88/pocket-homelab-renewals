@@ -112,7 +112,7 @@ func (s *Server) seedDemo(ctx context.Context, uid int64) error {
 		looked, found, added int
 		ago                  int
 	}{{"documents", 312, 14, 2, 1}, {"home", 18, 6, 2, 1}, {"monitoring", 9, 3, 1, 2}, {"inventory", 41, 1, 1, 3}, {"money", 24, 4, 1, 3}, {"garage", 12, 2, 1, 6}} {
-		sc, err := s.store.StartScan(ctx, uid, src.name, "weekly")
+		sc, err := s.store.StartScan(ctx, uid, src.name, "nightly")
 		if err != nil {
 			continue
 		}
