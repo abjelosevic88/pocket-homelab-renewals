@@ -267,3 +267,5 @@ a.list-row:hover, .list-row:has(> a.row-main:hover) { background: var(--hover); 
   .chip { flex-shrink: 0; }
 }
 .set-part { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 8px 0 -6px; }
+/* whole rows, tiles and sidebar groups are links: no underline on hover (the row highlights instead) */
+a.list-row:hover, a.tile:hover, a.sb-group:hover, a.chip:hover { text-decoration: none; }
