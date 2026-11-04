@@ -1,0 +1,5 @@
+# Pocket Renewals behind Caddy. Homepage widgets and linked apps send their own
+# bearer token to /api/*.
+renewals.example.com {
+	reverse_proxy pocket-renewals:8080
+}
