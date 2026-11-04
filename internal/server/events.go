@@ -40,6 +40,7 @@ var eventSources = map[string]string{
 	"inventory.item_created": "inventory", "inventory.item_updated": "inventory",
 	"money.subscription_saved": "money", "money.subscription_paid": "money",
 	"monitoring.cert_changed": "monitoring",
+	"wealth.asset_saved":      "wealth",
 }
 
 func streamTopics() string {

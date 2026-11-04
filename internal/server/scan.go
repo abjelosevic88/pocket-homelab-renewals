@@ -41,6 +41,7 @@ var scanSources = []scanSource{
 	{"inventory", "Pocket Inventory", "Items with an expiry date that are not food: the first-aid kit, the fire extinguisher, medicine.", appInventory, []string{scopeItemsRead}, "", (*Server).scanInventory},
 	{"monitoring", "Pocket Monitoring", "The TLS certificates of the websites you monitor.", appMonitoring, []string{scopeMonitorRead}, "", (*Server).scanMonitoring},
 	{"money", "Pocket Money", "Yearly and other long subscriptions, and subscriptions with an end date.", appMoney, []string{scopeTxRead}, "", (*Server).scanMoney},
+	{"wealth", "Pocket Wealth", "Term deposits that mature, fixed mortgage rates that end, money lent that is due back.", appWealth, []string{scopeWealthRead}, "", (*Server).scanWealth},
 	{"email", "Pocket Email", "Renewal notices in your email (“your domain expires”, “your policy renews”), read by AI.", appEmail, []string{scopeMailRead}, "required", (*Server).scanEmail},
 }
 
@@ -505,6 +506,32 @@ func hostOf(u string) string {
 	h, _, _ := strings.Cut(u, "/")
 	h, _, _ = strings.Cut(h, ":")
 	return h
+}
+
+// ---- Pocket Wealth ----
+
+func (s *Server) scanWealth(ctx context.Context, sc *scanRun) error {
+	items, err := sc.conn.client.Maturing(ctx)
+	if err != nil {
+		return fmt.Errorf("Pocket Wealth: %w", err)
+	}
+	for _, it := range items {
+		sc.rec.Looked++
+		if it.MaturesOn == "" {
+			continue
+		}
+		title := "Matures: " + it.Name
+		switch {
+		case it.Debt:
+			title = "Fixed rate ends: " + it.Name
+		case it.Kind == "receivable":
+			title = "Due back: " + it.Name
+		}
+		f := store.Found{Ref: "wealth:asset:" + itoa(it.ID), Source: "wealth", Title: title, Kind: "contract", Provider: it.Institution, Number: it.Number,
+			ExpiresOn: it.MaturesOn, SourceURL: it.URL, FoundBy: "the date it matures or ends in Pocket Wealth (" + it.KindLabel + ")"}
+		s.add(ctx, sc, f)
+	}
+	return nil
 }
 
 // ---- Pocket Money ----

@@ -608,6 +608,30 @@ func (c *Client) ExpiringItems(ctx context.Context, days int) ([]Item, error) {
 	return list[Item](raw, "items")
 }
 
+// ---------------- Pocket Wealth ----------------
+
+// Maturing is a deposit that matures, a fixed rate that ends or money due back.
+type Maturing struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Kind        string `json:"kind"`
+	KindLabel   string `json:"kind_label"`
+	Debt        bool   `json:"debt"`
+	Institution string `json:"institution"`
+	Number      string `json:"number"`
+	MaturesOn   string `json:"matures_on"`
+	URL         string `json:"url"`
+}
+
+// Maturing lists the person's assets and debts with a date they mature or end.
+func (c *Client) Maturing(ctx context.Context) ([]Maturing, error) {
+	var raw json.RawMessage
+	if err := c.do(ctx, http.MethodGet, "/api/v1/maturing", nil, nil, &raw); err != nil {
+		return nil, err
+	}
+	return list[Maturing](raw, "items")
+}
+
 // ---------------- Pocket Monitoring ----------------
 
 // Server is a machine in Pocket Monitoring.

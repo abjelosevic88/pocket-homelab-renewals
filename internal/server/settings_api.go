@@ -330,6 +330,11 @@ func (s *Server) handleIntegrationTest(w http.ResponseWriter, r *http.Request) {
 					}
 				case "inventory":
 					_, err = conn.client.SearchItems(ctx, "", 1)
+				case "wealth":
+					var items []pocket.Maturing
+					if items, err = conn.client.Maturing(ctx); err == nil {
+						msg += fmt.Sprintf(", %d with a date they mature or end", len(items))
+					}
 				case "monitoring":
 					var srv []pocket.Server
 					if srv, err = conn.client.Servers(ctx); err == nil {
