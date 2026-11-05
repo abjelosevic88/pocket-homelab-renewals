@@ -42,6 +42,7 @@ var scanSources = []scanSource{
 	{"monitoring", "Pocket Monitoring", "The TLS certificates of the websites you monitor.", appMonitoring, []string{scopeMonitorRead}, "", (*Server).scanMonitoring},
 	{"money", "Pocket Money", "Yearly and other long subscriptions, and subscriptions with an end date.", appMoney, []string{scopeTxRead}, "", (*Server).scanMoney},
 	{"wealth", "Pocket Wealth", "Term deposits that mature, fixed mortgage rates that end, money lent that is due back.", appWealth, []string{scopeWealthRead}, "", (*Server).scanWealth},
+	{"pets", "Pocket Pets", "Your pets’ insurance and their vaccines’ “valid until”, the latest of each.", appPets, []string{scopePetsRead}, "", (*Server).scanPets},
 	{"email", "Pocket Email", "Renewal notices in your email (“your domain expires”, “your policy renews”), read by AI.", appEmail, []string{scopeMailRead}, "required", (*Server).scanEmail},
 }
 
@@ -532,6 +533,92 @@ func (s *Server) scanWealth(ctx context.Context, sc *scanRun) error {
 		s.add(ctx, sc, f)
 	}
 	return nil
+}
+
+// ---- Pocket Pets ----
+
+// scanPets reads each living pet's insurance and, from the health log, the
+// latest vaccine of each name (an older one of the same name was superseded
+// by it); its "valid until" is when the booster is due. Pets that passed
+// away or were archived are left out, with their vaccines.
+func (s *Server) scanPets(ctx context.Context, sc *scanRun) error {
+	pets, err := sc.conn.client.Pets(ctx)
+	if err != nil {
+		return fmt.Errorf("Pocket Pets: %w", err)
+	}
+	base := strings.TrimRight(sc.conn.public, "/")
+	live := map[int64]string{}
+	for _, p := range pets {
+		sc.rec.Looked++
+		if p.PassedOn != "" || p.Archived {
+			continue
+		}
+		name := firstNonEmpty(strings.TrimSpace(p.Name), "Pet")
+		live[p.ID] = name
+		if p.InsuredUntil == "" {
+			continue
+		}
+		f := store.Found{Ref: "pets:pet:" + itoa(p.ID) + ":insurance", Source: "pets", Title: name + ": Pet insurance", Kind: "insurance", Holder: name,
+			Provider: p.Insurer, Number: p.PolicyNo, ExpiresOn: p.InsuredUntil, Currency: p.Currency, FoundBy: "the pet's insurance in Pocket Pets"}
+		if base != "" {
+			f.SourceURL = base + "/pets/" + itoa(p.ID)
+		}
+		s.add(ctx, sc, f)
+	}
+	if len(live) == 0 {
+		return nil
+	}
+	recs, err := sc.conn.client.Vaccines(ctx)
+	if err != nil {
+		return fmt.Errorf("Pocket Pets health log: %w", err)
+	}
+	latest := map[string]pocket.PetRecord{}
+	var order []string
+	for _, r := range recs {
+		sc.rec.Looked++
+		name := vaccineName(r.Title)
+		if _, ok := live[r.PetID]; !ok || name == "" || (r.Kind != "" && r.Kind != "vaccine") {
+			continue
+		}
+		key := itoa(r.PetID) + ":" + name
+		have, ok := latest[key]
+		if !ok {
+			order = append(order, key)
+		} else if have.Date > r.Date || (have.Date == r.Date && have.ID > r.ID) {
+			continue
+		}
+		latest[key] = r
+	}
+	for _, key := range order {
+		r := latest[key]
+		if r.ValidUntil == "" {
+			continue // the latest one has no end date: nothing runs out
+		}
+		pet := live[r.PetID]
+		title := strings.TrimSpace(r.Title)
+		if t := strings.ToLower(title); !strings.Contains(t, "vaccin") && !strings.Contains(t, "vakcin") && !strings.Contains(t, "cjep") {
+			title += " vaccine"
+		}
+		f := store.Found{Ref: "pets:vaccine:" + key, Source: "pets", Title: pet + ": " + title, Kind: "health", Holder: pet, Provider: r.ProName,
+			IssuedOn: r.Date, ExpiresOn: r.ValidUntil, FoundBy: "the latest “" + strings.TrimSpace(r.Title) + "” vaccine in Pocket Pets' health log"}
+		if days := store.DaysBetween(r.Date, r.ValidUntil); days >= 330 {
+			f.RenewN, f.RenewUnit = (days+60)/365, "year"
+		}
+		if r.Cost > 0 {
+			cost := r.Cost
+			f.Cost, f.Currency = &cost, r.Currency
+		}
+		if base != "" {
+			f.SourceURL = base + "/log/" + itoa(r.ID)
+		}
+		s.add(ctx, sc, f)
+	}
+	return nil
+}
+
+// vaccineName is a vaccine's title made comparable: "Rabies " and "rabies" are one.
+func vaccineName(title string) string {
+	return strings.Join(strings.Fields(strings.ToLower(title)), "-")
 }
 
 // ---- Pocket Money ----

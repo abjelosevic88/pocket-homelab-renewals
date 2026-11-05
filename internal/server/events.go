@@ -24,8 +24,8 @@ import (
 // Renewals → <app> events:read link switched on. A processed or changed
 // document is read at once (scanDocuments with just that one), so a passport
 // scanned into Pocket Documents shows up here within seconds; an appliance,
-// a vehicle reminder or paper, an item, a subscription or a certificate that
-// was saved starts a quick look through that app for that person (a few
+// a vehicle reminder or paper, an item, a subscription, a certificate, an
+// asset, a pet or a pet's vaccine that was saved starts a quick look through that app for that person (a few
 // seconds later, once for a burst of saves). The last event id is kept, so
 // after a restart the stream resumes where it was; events older than a day
 // are skipped (the nightly scan catches those).
@@ -41,6 +41,7 @@ var eventSources = map[string]string{
 	"money.subscription_saved": "money", "money.subscription_paid": "money",
 	"monitoring.cert_changed": "monitoring",
 	"wealth.asset_saved":      "wealth",
+	"pets.pet_saved":          "pets", "pets.record_added": "pets", "pets.record_saved": "pets",
 }
 
 func streamTopics() string {

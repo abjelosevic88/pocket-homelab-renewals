@@ -632,6 +632,56 @@ func (c *Client) Maturing(ctx context.Context) ([]Maturing, error) {
 	return list[Maturing](raw, "items")
 }
 
+// ---------------- Pocket Pets ----------------
+
+// Pet is one of the person's pets in Pocket Pets.
+type Pet struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Species      string `json:"species"`
+	Breed        string `json:"breed"`
+	Microchip    string `json:"microchip"`
+	PassportNo   string `json:"passport_no"`
+	Insurer      string `json:"insurer"`
+	PolicyNo     string `json:"policy_no"`
+	InsuredUntil string `json:"insured_until"`
+	PassedOn     string `json:"passed_on"`
+	Archived     bool   `json:"archived"`
+	Currency     string `json:"currency"`
+}
+
+// PetRecord is an entry in a pet's health log (a vet visit, a vaccine…).
+type PetRecord struct {
+	ID         int64  `json:"id"`
+	PetID      int64  `json:"pet_id"`
+	PetName    string `json:"pet_name"`
+	Kind       string `json:"kind"`
+	Title      string `json:"title"`
+	Date       string `json:"date"`
+	ValidUntil string `json:"valid_until"`
+	Cost       int64  `json:"cost"`
+	Currency   string `json:"currency"`
+	ProName    string `json:"pro_name"`
+}
+
+// Pets lists the person's pets.
+func (c *Client) Pets(ctx context.Context) ([]Pet, error) {
+	var raw json.RawMessage
+	if err := c.do(ctx, http.MethodGet, "/api/v1/pets", nil, nil, &raw); err != nil {
+		return nil, err
+	}
+	return list[Pet](raw, "pets")
+}
+
+// Vaccines lists the person's vaccine records, newest first (up to 500).
+func (c *Client) Vaccines(ctx context.Context) ([]PetRecord, error) {
+	var raw json.RawMessage
+	if err := c.do(ctx, http.MethodGet, "/api/v1/records", url.Values{"kind": {"vaccine"}, "limit": {"500"}}, nil, &raw); err != nil {
+		return nil, err
+	}
+	return list[PetRecord](raw, "records")
+}
+
 // ---------------- Pocket Monitoring ----------------
 
 // Server is a machine in Pocket Monitoring.

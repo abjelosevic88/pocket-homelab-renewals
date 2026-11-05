@@ -335,6 +335,14 @@ func (s *Server) handleIntegrationTest(w http.ResponseWriter, r *http.Request) {
 					if items, err = conn.client.Maturing(ctx); err == nil {
 						msg += fmt.Sprintf(", %d with a date they mature or end", len(items))
 					}
+				case "pets":
+					var pets []pocket.Pet
+					if pets, err = conn.client.Pets(ctx); err == nil {
+						msg += fmt.Sprintf(", %d pets", len(pets))
+						if _, verr := conn.client.Vaccines(ctx); verr != nil {
+							msg += "; their health log is not open to Renewals (" + verr.Error() + ")"
+						}
+					}
 				case "monitoring":
 					var srv []pocket.Server
 					if srv, err = conn.client.Servers(ctx); err == nil {

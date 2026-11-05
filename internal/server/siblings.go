@@ -39,6 +39,7 @@ const (
 	scopeTripsRead     = "trips:read"
 	scopeMailRead      = "mail:read"
 	scopeWealthRead    = "wealth:read"
+	scopePetsRead      = "pets:read"
 )
 
 // pocketApp is one sibling Pocket app Renewals acts in.
@@ -56,12 +57,13 @@ var (
 	appMonitoring = pocketApp{"monitoring", "Pocket Monitoring", []string{scopeMonitorRead, scopeEventsRead}, "Track when the TLS certificates of the sites you monitor run out, and when they are renewed"}
 	appMoney      = pocketApp{"money", "Pocket Money", []string{scopeAccountsRead, scopeTxRead, scopeTxWrite, scopeEventsRead}, "Find yearly subscriptions as soon as you add or pay one, and book what a renewal cost"}
 	appWealth     = pocketApp{"wealth", "Pocket Wealth", []string{scopeWealthRead, scopeEventsRead}, "Remind you before a term deposit matures, a fixed mortgage rate ends or money you lent is due back, as soon as you set the date"}
+	appPets       = pocketApp{"pets", "Pocket Pets", []string{scopePetsRead, scopeEventsRead}, "Remind you before your pets' insurance runs out or a vaccine needs a booster, as soon as you save it"}
 	appEmail      = pocketApp{"email", "Pocket Email", []string{scopeMailRead}, "Find renewal notices in your email (\"your domain expires\", \"your policy renews\")"}
 	appTravel     = pocketApp{"travel", "Pocket Travel", []string{scopeTripsRead}, "Warn you when a passport or ID runs out before or soon after a trip"}
 	appCalendar   = pocketApp{"calendar", "Pocket Calendar", []string{scopeCalendarRead, scopeCalendarWrite}, "Put expiry dates on your calendar as all-day events, and move them when you renew"}
 	appTasks      = pocketApp{"tasks", "Pocket Tasks", []string{scopeTasksWrite}, "Add \"renew it\" to your task list, due by the last day to act"}
 	appContacts   = pocketApp{"contacts", "Pocket Contacts", []string{scopeContactsRead}, "Keep who to call (the insurance agent, the registrar) with a renewal"}
-	pocketApps    = []pocketApp{appDocuments, appHome, appGarage, appInventory, appMonitoring, appMoney, appWealth, appEmail, appTravel, appCalendar, appTasks, appContacts}
+	pocketApps    = []pocketApp{appDocuments, appHome, appGarage, appInventory, appMonitoring, appMoney, appWealth, appPets, appEmail, appTravel, appCalendar, appTasks, appContacts}
 )
 
 func appBySlug(slug string) (pocketApp, bool) {
