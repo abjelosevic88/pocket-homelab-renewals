@@ -682,6 +682,34 @@ func (c *Client) Vaccines(ctx context.Context) ([]PetRecord, error) {
 	return list[PetRecord](raw, "records")
 }
 
+// ---------------- Pocket Wallet ----------------
+
+// Card is one thing in Pocket Wallet: a loyalty, membership or gift card, a
+// ticket, a boarding pass, an ID card, a passport, a licence.
+type Card struct {
+	ID        int64  `json:"id"`
+	Kind      string `json:"kind"`
+	Group     string `json:"group"` // cards | passes | ids
+	Name      string `json:"name"`
+	Issuer    string `json:"issuer"`
+	Number    string `json:"number"`
+	Holder    string `json:"holder"`
+	ValidFrom string `json:"valid_from"`
+	ExpiresOn string `json:"expires_on"`
+	Archived  bool   `json:"archived"`
+	Balance   *int64 `json:"balance"` // what is left on a gift card, in cents
+	Currency  string `json:"currency"`
+}
+
+// Cards lists the person's cards that are not archived.
+func (c *Client) Cards(ctx context.Context) ([]Card, error) {
+	var raw json.RawMessage
+	if err := c.do(ctx, http.MethodGet, "/api/v1/cards", nil, nil, &raw); err != nil {
+		return nil, err
+	}
+	return list[Card](raw, "cards")
+}
+
 // ---------------- Pocket Monitoring ----------------
 
 // Server is a machine in Pocket Monitoring.

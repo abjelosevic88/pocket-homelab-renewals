@@ -43,6 +43,7 @@ var scanSources = []scanSource{
 	{"money", "Pocket Money", "Yearly and other long subscriptions, and subscriptions with an end date.", appMoney, []string{scopeTxRead}, "", (*Server).scanMoney},
 	{"wealth", "Pocket Wealth", "Term deposits that mature, fixed mortgage rates that end, money lent that is due back.", appWealth, []string{scopeWealthRead}, "", (*Server).scanWealth},
 	{"pets", "Pocket Pets", "Your pets’ insurance and their vaccines’ “valid until”, the latest of each.", appPets, []string{scopePetsRead}, "", (*Server).scanPets},
+	{"wallet", "Pocket Wallet", "Your passport, ID card, driving licence and insurance cards, memberships and gift cards with an end date.", appWallet, []string{scopeWalletRead}, "", (*Server).scanWallet},
 	{"email", "Pocket Email", "Renewal notices in your email (“your domain expires”, “your policy renews”), read by AI.", appEmail, []string{scopeMailRead}, "required", (*Server).scanEmail},
 }
 
@@ -619,6 +620,63 @@ func (s *Server) scanPets(ctx context.Context, sc *scanRun) error {
 // vaccineName is a vaccine's title made comparable: "Rabies " and "rabies" are one.
 func vaccineName(title string) string {
 	return strings.Join(strings.Fields(strings.ToLower(title)), "-")
+}
+
+// ---- Pocket Wallet ----
+
+// walletKinds are the wallet's kinds that run out, as Renewals' kinds, with
+// how to say what each one is. Loyalty cards, tickets and boarding passes
+// are left out: they do not get renewed.
+var walletKinds = map[string]struct{ kind, what string }{
+	"passport":   {"passport", "a passport"},
+	"id":         {"id_card", "an ID card"},
+	"licence":    {"driving_licence", "a driving licence"},
+	"insurance":  {"insurance", "an insurance or health card"},
+	"membership": {"membership", "a membership card"},
+	"gift":       {"other", "a gift card"},
+}
+
+// scanWallet reads the end date of the IDs, passports, driving licences and
+// insurance cards in Pocket Wallet, and of its memberships and gift cards.
+// A gift card with nothing left on it is left out; one with money left says
+// how much in "found by".
+func (s *Server) scanWallet(ctx context.Context, sc *scanRun) error {
+	cards, err := sc.conn.client.Cards(ctx)
+	if err != nil {
+		return fmt.Errorf("Pocket Wallet: %w", err)
+	}
+	base := strings.TrimRight(sc.conn.public, "/")
+	for _, c := range cards {
+		sc.rec.Looked++
+		k, ok := walletKinds[c.Kind]
+		if !ok || c.Archived || c.ExpiresOn == "" || (c.Kind == "gift" && c.Balance != nil && *c.Balance <= 0) {
+			continue
+		}
+		title := firstNonEmpty(strings.TrimSpace(c.Name), strings.TrimSpace(c.Issuer))
+		switch {
+		case c.Kind == "gift" && title != "":
+			title = "Gift card: " + title
+		case c.Kind == "gift":
+			title = "Gift card"
+		case title == "":
+			title = store.KindOf(k.kind).Label
+		}
+		f := store.Found{Ref: "wallet:card:" + itoa(c.ID), Source: "wallet", Title: title, Kind: k.kind, Holder: c.Holder, Provider: c.Issuer, Number: c.Number, ExpiresOn: c.ExpiresOn, Currency: c.Currency, FoundBy: k.what + " in Pocket Wallet"}
+		if validDate(c.ValidFrom) {
+			f.IssuedOn = c.ValidFrom
+		}
+		if c.Kind == "gift" {
+			f.RenewUnit = "year" // nothing to renew: spend it before the date
+			if c.Balance != nil {
+				f.FoundBy += fmt.Sprintf(", with %d.%02d %s left on it when it was found", *c.Balance/100, *c.Balance%100, firstNonEmpty(c.Currency, sc.st.Currency))
+			}
+		}
+		if base != "" {
+			f.SourceURL = base + "/cards/" + itoa(c.ID)
+		}
+		s.add(ctx, sc, f)
+	}
+	return nil
 }
 
 // ---- Pocket Money ----

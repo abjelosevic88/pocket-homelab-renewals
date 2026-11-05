@@ -343,6 +343,17 @@ func (s *Server) handleIntegrationTest(w http.ResponseWriter, r *http.Request) {
 							msg += "; their health log is not open to Renewals (" + verr.Error() + ")"
 						}
 					}
+				case "wallet":
+					var cards []pocket.Card
+					if cards, err = conn.client.Cards(ctx); err == nil {
+						dated := 0
+						for _, c := range cards {
+							if c.ExpiresOn != "" {
+								dated++
+							}
+						}
+						msg += fmt.Sprintf(", %d cards, %d with an end date", len(cards), dated)
+					}
 				case "monitoring":
 					var srv []pocket.Server
 					if srv, err = conn.client.Servers(ctx); err == nil {

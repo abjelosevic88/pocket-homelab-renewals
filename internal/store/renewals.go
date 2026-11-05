@@ -521,7 +521,8 @@ func (s *Store) UpsertFound(ctx context.Context, uid int64, f Found) (string, *R
 
 // SourceNames are the apps a renewal can be found in.
 var SourceNames = map[string]string{"documents": "Pocket Documents", "home": "Pocket Home", "garage": "Pocket Garage", "inventory": "Pocket Inventory",
-	"monitoring": "Pocket Monitoring", "money": "Pocket Money", "wealth": "Pocket Wealth", "pets": "Pocket Pets", "email": "Pocket Email"}
+	"monitoring": "Pocket Monitoring", "money": "Pocket Money", "wealth": "Pocket Wealth", "pets": "Pocket Pets", "wallet": "Pocket Wallet",
+	"email": "Pocket Email"}
 
 func sourceName(src string) string {
 	if n, ok := SourceNames[src]; ok {

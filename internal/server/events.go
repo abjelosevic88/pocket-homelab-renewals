@@ -25,10 +25,11 @@ import (
 // document is read at once (scanDocuments with just that one), so a passport
 // scanned into Pocket Documents shows up here within seconds; an appliance,
 // a vehicle reminder or paper, an item, a subscription, a certificate, an
-// asset, a pet or a pet's vaccine that was saved starts a quick look through that app for that person (a few
-// seconds later, once for a burst of saves). The last event id is kept, so
-// after a restart the stream resumes where it was; events older than a day
-// are skipped (the nightly scan catches those).
+// asset, a pet, a pet's vaccine or a card in the wallet that was saved (or a
+// card taken out of it) starts a quick look through that app for that person
+// (a few seconds later, once for a burst of saves). The last event id is
+// kept, so after a restart the stream resumes where it was; events older
+// than a day are skipped (the nightly scan catches those).
 
 const cursorKey = "events:cursor"
 
@@ -42,6 +43,7 @@ var eventSources = map[string]string{
 	"monitoring.cert_changed": "monitoring",
 	"wealth.asset_saved":      "wealth",
 	"pets.pet_saved":          "pets", "pets.record_added": "pets", "pets.record_saved": "pets",
+	"wallet.card_saved": "wallet", "wallet.card_removed": "wallet",
 }
 
 func streamTopics() string {
