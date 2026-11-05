@@ -41,14 +41,14 @@ export const GROUPS: { value: Group; label: string; icon: string }[] = [
 export const GROUP_NAME: Record<string, string> = Object.fromEntries(GROUPS.map(g => [g.value, g.label]))
 
 export const SOURCE_NAME: Record<string, string> = {
-  documents: 'Pocket Documents', home: 'Pocket Home', garage: 'Pocket Garage', inventory: 'Pocket Inventory', monitoring: 'Pocket Monitoring', wealth: 'Pocket Wealth', pets: 'Pocket Pets',
+  documents: 'Pocket Documents', home: 'Pocket Home', garage: 'Pocket Garage', inventory: 'Pocket Inventory', monitoring: 'Pocket Monitoring', wealth: 'Pocket Wealth', pets: 'Pocket Pets', wallet: 'Pocket Wallet',
   money: 'Pocket Money', email: 'Pocket Email', web: 'Added here', demo: 'Example', import: 'Imported', api: 'API', auto: 'By itself',
 }
 export const SOURCE_ICON: Record<string, string> = {
-  documents: 'file', home: 'home', garage: 'route', inventory: 'package', monitoring: 'activity', money: 'wallet', wealth: 'trending-up', pets: 'heart', email: 'mail', travel: 'plane',
+  documents: 'file', home: 'home', garage: 'route', inventory: 'package', monitoring: 'activity', money: 'wallet', wealth: 'trending-up', pets: 'heart', wallet: 'credit-card', email: 'mail', travel: 'plane',
   calendar: 'calendar', tasks: 'check-square', contacts: 'users',
 }
-export const fromApp = (r: Pick<Renewal, 'source'>) => ['documents', 'home', 'garage', 'inventory', 'monitoring', 'money', 'wealth', 'pets', 'email'].includes(r.source)
+export const fromApp = (r: Pick<Renewal, 'source'>) => ['documents', 'home', 'garage', 'inventory', 'monitoring', 'money', 'wealth', 'pets', 'wallet', 'email'].includes(r.source)
 
 export const UNITS: { value: Unit; label: string }[] = [{ value: 'day', label: 'days' }, { value: 'week', label: 'weeks' }, { value: 'month', label: 'months' }, { value: 'year', label: 'years' }]
 
