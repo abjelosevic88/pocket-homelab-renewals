@@ -495,6 +495,12 @@ func (s *Store) UpsertFound(ctx context.Context, uid int64, f Found) (string, *R
 		if err := s.Renew(ctx, uid, have, h); err != nil {
 			return "", nil, err
 		}
+		// the link back follows what the date came from (a newer vaccine, a newer paper)
+		if f.SourceURL != "" && f.SourceURL != have.SourceURL {
+			if _, err := s.DB.ExecContext(ctx, `UPDATE renewals SET source_url = ? WHERE user_id = ? AND id = ?`, f.SourceURL, uid, have.ID); err == nil {
+				have.SourceURL = f.SourceURL
+			}
+		}
 		return UpsertUpdated, have, nil
 	}
 	k := KindOf(f.Kind)
@@ -515,7 +521,7 @@ func (s *Store) UpsertFound(ctx context.Context, uid int64, f Found) (string, *R
 
 // SourceNames are the apps a renewal can be found in.
 var SourceNames = map[string]string{"documents": "Pocket Documents", "home": "Pocket Home", "garage": "Pocket Garage", "inventory": "Pocket Inventory",
-	"monitoring": "Pocket Monitoring", "money": "Pocket Money", "email": "Pocket Email"}
+	"monitoring": "Pocket Monitoring", "money": "Pocket Money", "wealth": "Pocket Wealth", "pets": "Pocket Pets", "email": "Pocket Email"}
 
 func sourceName(src string) string {
 	if n, ok := SourceNames[src]; ok {
