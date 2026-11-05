@@ -24,9 +24,9 @@
 - **Renewed**: the new date (one term on, suggested), what it cost — booked in Pocket Money if you like — and a note; the history keeps every renewal. Subscriptions and domains on auto-renew move on by themselves.
 - **Found in your other apps**, marked “Check” until you look:
   - **Pocket Documents** — the “Valid until” and other date fields, or (with AI) the text of passports, policies, contracts and warranty cards; a new document is read **within seconds of being filed**.
-  - **Pocket Home** — appliance warranties. **Pocket Garage** — registration, inspection, insurance and vignette reminders, vehicle papers with an end date. **Pocket Inventory** — things with an expiry date that are not food. **Pocket Monitoring** — TLS certificates. **Pocket Money** — yearly subscriptions. **Pocket Email** — renewal notices, read by AI.
+  - **Pocket Home** — appliance warranties. **Pocket Garage** — registration, inspection, insurance and vignette reminders, vehicle papers with an end date. **Pocket Inventory** — things with an expiry date that are not food. **Pocket Monitoring** — TLS certificates. **Pocket Money** — yearly subscriptions. **Pocket Wealth** — term deposits that mature, fixed rates that end, money due back. **Pocket Pets** — your pets’ insurance and the latest vaccine of each kind (pets that passed away are left out). **Pocket Email** — renewal notices, read by AI.
   - Nothing is added twice; a later date there moves it on here; what you delete stays deleted.
-  - **As it happens**: a new document, appliance warranty, vehicle reminder or paper, item, subscription or renewed certificate shows up seconds after you save it (Core events), and a nightly scan catches anything else.
+  - **As it happens**: a new document, appliance warranty, vehicle reminder or paper, item, subscription, renewed certificate, deposit, pet or vaccine shows up seconds after you save it (Core events), and a nightly scan catches anything else.
 - **Before you travel**: a passport, ID or visa that runs out before a trip in Pocket Travel ends — or within the six months many countries ask for — shows on the overview.
 - **The rest of the box**: dates on your Pocket Calendar, “renew it” on your Pocket Tasks, the scan kept from Pocket Documents, who to call from Pocket Contacts. Pocket AI can answer “what runs out this month?”.
 - Per person: everyone has their own list and connections; admins do not see anyone else's. Light and dark, phone first, a JSON export/import and a CSV of the list.
@@ -55,6 +55,8 @@ Set `CORE_URL` and `CORE_REGISTRATION_KEY` and Renewals joins the box: people si
 | Pocket Inventory | expiry dates on your shelves | `items:read`, `events:read` |
 | Pocket Monitoring | TLS certificates | `monitoring:read`, `events:read` |
 | Pocket Money | yearly subscriptions; what a renewal cost, as a transaction | `accounts:read`, `transactions:read`, `transactions:write`, `events:read` |
+| Pocket Wealth | term deposits, fixed rates and money due back | `wealth:read`, `events:read` |
+| Pocket Pets | pet insurance and vaccines | `pets:read`, `events:read` |
 | Pocket Email | renewal notices (with AI) | `mail:read` |
 | Pocket Travel | passports and visas against your trips | `trips:read` |
 | Pocket Calendar | the dates as all-day events | `calendar:read`, `calendar:write` |
