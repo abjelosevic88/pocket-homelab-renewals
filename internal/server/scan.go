@@ -44,6 +44,7 @@ var scanSources = []scanSource{
 	{"wealth", "Pocket Wealth", "Term deposits that mature, fixed mortgage rates that end, money lent that is due back.", appWealth, []string{scopeWealthRead}, "", (*Server).scanWealth},
 	{"pets", "Pocket Pets", "Your pets’ insurance and their vaccines’ “valid until”, the latest of each.", appPets, []string{scopePetsRead}, "", (*Server).scanPets},
 	{"wallet", "Pocket Wallet", "Your passport, ID card, driving licence and insurance cards, memberships and gift cards with an end date.", appWallet, []string{scopeWalletRead}, "", (*Server).scanWallet},
+	{"rentals", "Pocket Rentals", "When the leases you let out end, with the notice period as the time to act.", appRentals, []string{scopeRentalsRead}, "", (*Server).scanRentals},
 	{"email", "Pocket Email", "Renewal notices in your email (“your domain expires”, “your policy renews”), read by AI.", appEmail, []string{scopeMailRead}, "required", (*Server).scanEmail},
 }
 
@@ -677,6 +678,70 @@ func (s *Server) scanWallet(ctx context.Context, sc *scanRun) error {
 		s.add(ctx, sc, f)
 	}
 	return nil
+}
+
+// ---- Pocket Rentals ----
+
+// scanRentals reads the end of each active lease in Pocket Rentals. A lease
+// that runs until notice has no date and is left out. The notice period is
+// the lead time: the last day to give (or expect) notice is the day to act.
+func (s *Server) scanRentals(ctx context.Context, sc *scanRun) error {
+	leases, err := sc.conn.client.Leases(ctx)
+	if err != nil {
+		return fmt.Errorf("Pocket Rentals: %w", err)
+	}
+	base := strings.TrimRight(sc.conn.public, "/")
+	for _, l := range leases {
+		sc.rec.Looked++
+		if (l.Status != "" && l.Status != "active") || !validDate(l.EndDate) || l.EndDate == "" {
+			continue
+		}
+		where := leasePlace(l)
+		var names []string
+		for _, t := range l.Tenants {
+			if n := strings.TrimSpace(t.Name); n != "" {
+				names = append(names, n)
+			}
+		}
+		title := "Lease ends — " + where
+		if len(names) > 0 {
+			title += " (" + strings.Join(names, ", ") + ")"
+		}
+		f := store.Found{Ref: "rentals:lease:" + itoa(l.ID), Source: "rentals", Title: title, Kind: "contract", Holder: strings.Join(names, ", "),
+			Provider: strings.TrimSpace(l.PropertyName), ExpiresOn: l.EndDate, Currency: l.Currency, LeadDays: max(0, l.NoticeDays),
+			FoundBy: "the end of a lease in Pocket Rentals"}
+		if l.NoticeDays > 0 {
+			f.FoundBy += fmt.Sprintf(", with %d days' notice", l.NoticeDays)
+		}
+		if validDate(l.StartDate) && l.StartDate != "" {
+			f.IssuedOn = l.StartDate
+			if days := store.DaysBetween(l.StartDate, l.EndDate); days >= 330 {
+				f.RenewN, f.RenewUnit = (days+60)/365, "year"
+			} else if days >= 25 {
+				f.RenewN, f.RenewUnit = max(1, (days+15)/30), "month"
+			}
+		}
+		if base != "" {
+			f.SourceURL = base + "/leases/" + itoa(l.ID)
+		}
+		s.add(ctx, sc, f)
+	}
+	return nil
+}
+
+// leasePlace is where a lease is: "Flat 2, Ilica 10", or just the place
+// when it is let whole.
+func leasePlace(l pocket.Lease) string {
+	unit, prop := strings.TrimSpace(l.UnitName), strings.TrimSpace(l.PropertyName)
+	switch {
+	case prop == "" && unit == "":
+		return firstNonEmpty(strings.TrimSpace(l.Title), "a place you let")
+	case prop == "":
+		return unit
+	case unit == "" || strings.EqualFold(unit, prop) || strings.EqualFold(unit, "Whole place"):
+		return prop
+	}
+	return unit + ", " + prop
 }
 
 // ---- Pocket Money ----

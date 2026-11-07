@@ -466,6 +466,7 @@ type Found struct {
 	DocumentID *int64
 	DocTitle   string
 	Unsure     bool // read by AI or guessed: shown as "check this"
+	LeadDays   int  // how many days before the date to act (a lease's notice period)
 }
 
 // Upsert results.
@@ -506,7 +507,7 @@ func (s *Store) UpsertFound(ctx context.Context, uid int64, f Found) (string, *R
 	k := KindOf(f.Kind)
 	r := &Renewal{Title: f.Title, Kind: f.Kind, Holder: f.Holder, Provider: f.Provider, Number: f.Number, IssuedOn: f.IssuedOn, ExpiresOn: f.ExpiresOn,
 		RenewN: f.RenewN, RenewUnit: f.RenewUnit, AutoRenews: f.AutoRenews, Cost: f.Cost, Currency: f.Currency, Source: f.Source, SourceRef: f.Ref,
-		SourceURL: f.SourceURL, FoundBy: f.FoundBy, DocumentID: f.DocumentID, DocumentTitle: f.DocTitle, NeedsCheck: true}
+		SourceURL: f.SourceURL, FoundBy: f.FoundBy, DocumentID: f.DocumentID, DocumentTitle: f.DocTitle, NeedsCheck: true, LeadDays: f.LeadDays}
 	if r.RenewN == 0 && f.RenewUnit == "" {
 		r.RenewN, r.RenewUnit = k.TermN, k.TermU
 	}
@@ -522,7 +523,7 @@ func (s *Store) UpsertFound(ctx context.Context, uid int64, f Found) (string, *R
 // SourceNames are the apps a renewal can be found in.
 var SourceNames = map[string]string{"documents": "Pocket Documents", "home": "Pocket Home", "garage": "Pocket Garage", "inventory": "Pocket Inventory",
 	"monitoring": "Pocket Monitoring", "money": "Pocket Money", "wealth": "Pocket Wealth", "pets": "Pocket Pets", "wallet": "Pocket Wallet",
-	"email": "Pocket Email"}
+	"rentals": "Pocket Rentals", "email": "Pocket Email"}
 
 func sourceName(src string) string {
 	if n, ok := SourceNames[src]; ok {

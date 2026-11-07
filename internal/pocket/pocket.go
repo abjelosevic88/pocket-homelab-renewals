@@ -710,6 +710,38 @@ func (c *Client) Cards(ctx context.Context) ([]Card, error) {
 	return list[Card](raw, "cards")
 }
 
+// ---------------- Pocket Rentals ----------------
+
+// Lease is a lease in Pocket Rentals: a unit let to tenants from a day, to
+// a day ("" = until notice).
+type Lease struct {
+	ID           int64  `json:"id"`
+	Status       string `json:"status"` // draft | active | ended
+	StartDate    string `json:"start_date"`
+	EndDate      string `json:"end_date"`
+	NoticeDays   int    `json:"notice_days"`
+	Rent         int64  `json:"rent"` // cents
+	Currency     string `json:"currency"`
+	Frequency    string `json:"frequency"`
+	UnitName     string `json:"unit_name"`
+	PropertyID   int64  `json:"property_id"`
+	PropertyName string `json:"property_name"`
+	Title        string `json:"title"`
+	Tenants      []struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	} `json:"tenants"`
+}
+
+// Leases lists the person's active leases.
+func (c *Client) Leases(ctx context.Context) ([]Lease, error) {
+	var raw json.RawMessage
+	if err := c.do(ctx, http.MethodGet, "/api/v1/leases", url.Values{"status": {"active"}}, nil, &raw); err != nil {
+		return nil, err
+	}
+	return list[Lease](raw, "leases")
+}
+
 // ---------------- Pocket Monitoring ----------------
 
 // Server is a machine in Pocket Monitoring.
