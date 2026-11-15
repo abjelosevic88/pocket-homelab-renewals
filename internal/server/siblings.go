@@ -42,6 +42,7 @@ const (
 	scopePetsRead      = "pets:read"
 	scopeWalletRead    = "wallet:read"
 	scopeRentalsRead   = "rentals:read"
+	scopeTasksRead     = "tasks:read"
 )
 
 // pocketApp is one sibling Pocket app Renewals acts in.
@@ -65,7 +66,7 @@ var (
 	appEmail      = pocketApp{"email", "Pocket Email", []string{scopeMailRead}, "Find renewal notices in your email (\"your domain expires\", \"your policy renews\")"}
 	appTravel     = pocketApp{"travel", "Pocket Travel", []string{scopeTripsRead}, "Warn you when a passport or ID runs out before or soon after a trip"}
 	appCalendar   = pocketApp{"calendar", "Pocket Calendar", []string{scopeCalendarRead, scopeCalendarWrite}, "Put expiry dates on your calendar as all-day events, and move them when you renew"}
-	appTasks      = pocketApp{"tasks", "Pocket Tasks", []string{scopeTasksWrite}, "Add \"renew it\" to your task list, due by the last day to act"}
+	appTasks      = pocketApp{"tasks", "Pocket Tasks", []string{scopeTasksRead, scopeTasksWrite, scopeEventsRead}, "Pick up the tasks you add to renew or extend something (\"renew passport\", \"car registration\") as renewals, and add \"renew it\" to your task list, due by the last day to act"}
 	appContacts   = pocketApp{"contacts", "Pocket Contacts", []string{scopeContactsRead}, "Keep who to call (the insurance agent, the registrar) with a renewal"}
 	pocketApps    = []pocketApp{appDocuments, appHome, appGarage, appInventory, appMonitoring, appMoney, appWealth, appPets, appWallet, appRentals, appEmail, appTravel, appCalendar, appTasks, appContacts}
 )

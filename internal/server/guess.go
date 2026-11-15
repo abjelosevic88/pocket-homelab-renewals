@@ -13,7 +13,7 @@ var kindWords = []struct {
 	words []string
 }{
 	{"passport", []string{"passport", "pasoš", "pasos", "putovnica", "reisepass"}},
-	{"id_card", []string{"id card", "identity card", "national id", "lična karta", "licna karta", "lična", "osobna iskaznica", "personalausweis", "identity document"}},
+	{"id_card", []string{"id card", "identity card", "national id", "lična karta", "licna karta", "ličnu kartu", "licnu kartu", "lične karte", "licne karte", "lična", "osobna iskaznica", "personalausweis", "identity document"}},
 	{"driving_licence", []string{"driving licen", "driver's licen", "drivers licen", "driver licen", "vozačka", "vozacka", "führerschein", "fuhrerschein"}},
 	{"visa", []string{"visa", "viza", "residence permit", "boravišn", "boravisn", "dozvola boravka", "aufenthalt", "work permit", "radna dozvola"}},
 	{"certificate", []string{"tls certificate", "ssl certificate", "tls cert", "ssl cert"}},

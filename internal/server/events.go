@@ -26,7 +26,7 @@ import (
 // scanned into Pocket Documents shows up here within seconds; an appliance,
 // a vehicle reminder or paper, an item, a subscription, a certificate, an
 // asset, a pet, a pet's vaccine or a card in the wallet that was saved (or a
-// card taken out of it), or a lease let out that started, starts a quick look through that app for that person
+// card taken out of it), a lease let out that started, or a task added or changed, starts a quick look through that app for that person
 // (a few seconds later, once for a burst of saves). The last event id is
 // kept, so after a restart the stream resumes where it was; events older
 // than a day are skipped (the nightly scan catches those).
@@ -45,6 +45,7 @@ var eventSources = map[string]string{
 	"pets.pet_saved":          "pets", "pets.record_added": "pets", "pets.record_saved": "pets",
 	"wallet.card_saved": "wallet", "wallet.card_removed": "wallet",
 	"rentals.lease_started": "rentals",
+	"tasks.created": "tasks", "tasks.updated": "tasks",
 }
 
 func streamTopics() string {

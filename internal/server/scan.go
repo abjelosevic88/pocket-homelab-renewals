@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -45,6 +46,7 @@ var scanSources = []scanSource{
 	{"pets", "Pocket Pets", "Your pets’ insurance and their vaccines’ “valid until”, the latest of each.", appPets, []string{scopePetsRead}, "", (*Server).scanPets},
 	{"wallet", "Pocket Wallet", "Your passport, ID card, driving licence and insurance cards, memberships and gift cards with an end date.", appWallet, []string{scopeWalletRead}, "", (*Server).scanWallet},
 	{"rentals", "Pocket Rentals", "When the leases you let out end, with the notice period as the time to act.", appRentals, []string{scopeRentalsRead}, "", (*Server).scanRentals},
+	{"tasks", "Pocket Tasks", "Tasks with a due date that are about renewing something: “renew passport”, “car registration”, “domain expires”, or tagged “renewal”.", appTasks, []string{scopeTasksRead}, "", (*Server).scanTasks},
 	{"email", "Pocket Email", "Renewal notices in your email (“your domain expires”, “your policy renews”), read by AI.", appEmail, []string{scopeMailRead}, "required", (*Server).scanEmail},
 }
 
@@ -742,6 +744,85 @@ func leasePlace(l pocket.Lease) string {
 		return prop
 	}
 	return unit + ", " + prop
+}
+
+// ---- Pocket Tasks ----
+
+// renewalTaskWords mark a task as being about something that runs out:
+// renewing, extending, an expiry, or a thing that is renewed by nature
+// (a passport, the car's registration, a domain). Plain chores ("go to the
+// gym", "call the insurer back") are left out unless they say renew/expire
+// or carry a renewal tag.
+var renewalTaskWords = regexp.MustCompile(`(?i)(renew|expir|runs? out|valid until|obnov|produž|produz|istek|ističe|istice|važi do|vazi do|vrijedi do|traje do|verläng|verlang|ablauf|läuft ab|lauft ab|gültig bis|gultig bis|passport|pasoš|pasos|putovnic|reisepass|id card|ličn[aeu] kart|licn[aeu] kart|osobna iskaznica|personalausweis|driving licen|driver'?s licen|vozačk|vozack|führerschein|fuhrerschein|visa\b|viza\b|residence permit|boravišn|boravisn|work permit|radna dozvola|registration|registracij|tehnički pregled|tehnicki pregled|\bmot\b|tüv|vignette|vinjet|insurance|osiguranj|versicherung|kasko|domain|domen|certificate|certifikat|warranty|garancij|subscription|pretplat|membership|članarin|clanarin|licen[cs]e|lizenz)`)
+
+// renewalTags put any task with a due date in, whatever its words.
+var renewalTags = map[string]bool{"renewal": true, "renewals": true, "renew": true, "expiry": true, "expires": true, "obnova": true, "istek": true, "verlängerung": true}
+
+// renewalVerb is a leading "renew"/"obnovi" that the renewal's own title does
+// not need ("Renew passport" → "Passport").
+var renewalVerb = regexp.MustCompile(`(?i)^\s*(renew|extend|prolong|obnovi(ti)?|produži(ti)?|produzi(ti)?|verlängern|verlangern)\s+(the\s+|my\s+)?`)
+
+// isRenewalTask says whether a task is about something that runs out.
+func isRenewalTask(t pocket.Task) bool {
+	for _, tag := range t.Tags {
+		if renewalTags[strings.ToLower(strings.TrimSpace(strings.TrimPrefix(tag, "#")))] {
+			return true
+		}
+	}
+	return renewalTaskWords.MatchString(t.Title)
+}
+
+// renewalTitle is the task's title without a leading "renew".
+func renewalTitle(title string) string {
+	t := strings.TrimSpace(title)
+	if rest := strings.TrimSpace(renewalVerb.ReplaceAllString(t, "")); rest != "" && rest != t {
+		r := []rune(rest)
+		return strings.ToUpper(string(r[:1])) + string(r[1:])
+	}
+	return t
+}
+
+// scanTasks picks up the open tasks with a due date that are about renewing
+// something; the due date is the day it runs out. The "renew it" tasks
+// Renewals added itself are left out (they point back here), so nothing is
+// found twice.
+func (s *Server) scanTasks(ctx context.Context, sc *scanRun) error {
+	tasks, err := sc.conn.client.DueTasks(ctx, sc.oldest)
+	if err != nil {
+		return fmt.Errorf("Pocket Tasks: %w", err)
+	}
+	ours, err := s.store.TaskIDs(ctx, sc.uid)
+	if err != nil {
+		return err
+	}
+	self := strings.TrimRight(s.cfg.BaseURL, "/") + "/r/"
+	base := strings.TrimRight(sc.conn.public, "/")
+	for _, t := range tasks {
+		sc.rec.Looked++
+		if t.Done || (t.Status != "" && t.Status != "open" && t.Status != "in_progress") || t.Due == nil || ours[t.ID] {
+			continue
+		}
+		if self != "/r/" && strings.HasPrefix(t.URL, self) {
+			continue
+		}
+		due := *t.Due
+		if len(due) > 10 {
+			due = due[:10]
+		}
+		if !validDate(due) || due == "" || !isRenewalTask(t) {
+			continue
+		}
+		f := store.Found{Ref: "tasks:task:" + itoa(t.ID), Source: "tasks", Title: renewalTitle(t.Title), Kind: guessKind(t.Title, t.Notes),
+			ExpiresOn: due, FoundBy: "a task due that day in Pocket Tasks"}
+		if t.List != nil && strings.TrimSpace(t.List.Name) != "" {
+			f.FoundBy += " (list " + strings.TrimSpace(t.List.Name) + ")"
+		}
+		if base != "" {
+			f.SourceURL = base + "/tasks/" + itoa(t.ID)
+		}
+		s.add(ctx, sc, f)
+	}
+	return nil
 }
 
 // ---- Pocket Money ----

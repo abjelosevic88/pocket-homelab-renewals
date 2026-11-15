@@ -343,6 +343,20 @@ func (s *Server) handleIntegrationTest(w http.ResponseWriter, r *http.Request) {
 							msg += "; their health log is not open to Renewals (" + verr.Error() + ")"
 						}
 					}
+				case "tasks":
+					var tasks []pocket.Task
+					if tasks, err = conn.client.DueTasks(ctx, store.Today()); err == nil {
+						n := 0
+						for _, t := range tasks {
+							if isRenewalTask(t) {
+								n++
+							}
+						}
+						msg += fmt.Sprintf(", %d open tasks with a due date ahead, %d about renewing something", len(tasks), n)
+					} else if strings.Contains(err.Error(), "403") || strings.Contains(strings.ToLower(err.Error()), "scope") {
+						err = nil
+						msg += "; it cannot read your tasks yet (switch on tasks:read for Renewals → Pocket Tasks in Pocket Core), so it only adds them"
+					}
 				case "rentals":
 					var leases []pocket.Lease
 					if leases, err = conn.client.Leases(ctx); err == nil {

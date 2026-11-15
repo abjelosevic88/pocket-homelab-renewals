@@ -335,9 +335,30 @@ func (c *Client) DeleteEvent(ctx context.Context, id int64) error {
 
 // Task is a task in Pocket Tasks.
 type Task struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
-	Done  bool   `json:"done"`
+	ID     int64    `json:"id"`
+	Title  string   `json:"title"`
+	Done   bool     `json:"done"`
+	Notes  string   `json:"notes"`
+	Status string   `json:"status"` // open | in_progress | done | cancelled
+	Due    *string  `json:"due"`    // a day "2026-12-01" or a moment "2026-12-01T09:00"
+	Tags   []string `json:"tags"`
+	URL    string   `json:"url"`
+	List   *struct {
+		Name string `json:"name"`
+	} `json:"list"`
+}
+
+// DueTasks lists the person's open tasks due on or after a day.
+func (c *Client) DueTasks(ctx context.Context, from string) ([]Task, error) {
+	q := url.Values{"status": {"open"}, "limit": {"1000"}}
+	if from != "" {
+		q.Set("due_from", from)
+	}
+	var raw json.RawMessage
+	if err := c.do(ctx, http.MethodGet, "/api/v1/tasks", q, nil, &raw); err != nil {
+		return nil, err
+	}
+	return list[Task](raw, "tasks")
 }
 
 // CreateTask adds a task with a link back to the renewal.

@@ -276,6 +276,24 @@ func (s *Store) SetTask(ctx context.Context, uid, id int64, task *int64) error {
 	return err
 }
 
+// TaskIDs are the Pocket Tasks tasks Renewals added for a person's renewals.
+func (s *Store) TaskIDs(ctx context.Context, uid int64) (map[int64]bool, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT task_id FROM renewals WHERE user_id = ? AND task_id IS NOT NULL`, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[int64]bool{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out[id] = true
+	}
+	return out, rows.Err()
+}
+
 // Renew moves a renewal to its new date and writes the history, in one go.
 func (s *Store) Renew(ctx context.Context, uid int64, r *Renewal, h *History) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -523,7 +541,7 @@ func (s *Store) UpsertFound(ctx context.Context, uid int64, f Found) (string, *R
 // SourceNames are the apps a renewal can be found in.
 var SourceNames = map[string]string{"documents": "Pocket Documents", "home": "Pocket Home", "garage": "Pocket Garage", "inventory": "Pocket Inventory",
 	"monitoring": "Pocket Monitoring", "money": "Pocket Money", "wealth": "Pocket Wealth", "pets": "Pocket Pets", "wallet": "Pocket Wallet",
-	"rentals": "Pocket Rentals", "email": "Pocket Email"}
+	"rentals": "Pocket Rentals", "tasks": "Pocket Tasks", "email": "Pocket Email"}
 
 func sourceName(src string) string {
 	if n, ok := SourceNames[src]; ok {
