@@ -45,7 +45,7 @@ var eventSources = map[string]string{
 	"pets.pet_saved":          "pets", "pets.record_added": "pets", "pets.record_saved": "pets",
 	"wallet.card_saved": "wallet", "wallet.card_removed": "wallet",
 	"rentals.lease_started": "rentals",
-	"tasks.created": "tasks", "tasks.updated": "tasks",
+	"tasks.created":         "tasks", "tasks.updated": "tasks",
 }
 
 func streamTopics() string {

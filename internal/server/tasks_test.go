@@ -65,10 +65,10 @@ func tasksFixture(today string) []map[string]any {
 	return []map[string]any{
 		{"id": 1, "title": "Renew passport", "status": "open", "due": day(40), "tags": []string{}, "list": map[string]any{"name": "Inbox"}},
 		{"id": 2, "title": "Car registration", "status": "in_progress", "due": day(20) + "T09:00", "tags": []string{}},
-		{"id": 3, "title": "Pay the plumber", "status": "open", "due": day(5), "tags": []string{"Renewal"}},       // tagged
-		{"id": 4, "title": "Go to the gym", "status": "open", "due": day(2), "tags": []string{}},                  // a chore
+		{"id": 3, "title": "Pay the plumber", "status": "open", "due": day(5), "tags": []string{"Renewal"}},      // tagged
+		{"id": 4, "title": "Go to the gym", "status": "open", "due": day(2), "tags": []string{}},                 // a chore
 		{"id": 5, "title": "Renew domain", "status": "open", "tags": []string{}},                                 // no date
-		{"id": 6, "title": "Renew insurance", "status": "done", "due": day(10), "tags": []string{}},               // done
+		{"id": 6, "title": "Renew insurance", "status": "done", "due": day(10), "tags": []string{}},              // done
 		{"id": 7, "title": "Renew ID card", "status": "open", "due": day(30), "url": "http://renewals.test/r/9"}, // Renewals' own
 		{"id": 8, "title": "Obnoviti ličnu kartu", "status": "open", "due": day(60)},
 	}
