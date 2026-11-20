@@ -59,6 +59,8 @@ Everything found is added with `needs_check: true`, `source`, `source_ref`, `sou
 
 `/auth/*`, `/users`, `/settings` (+ `/settings/system`), `/tokens`, `/integrations/test`, `/notify/test`, `/notify/check`, `/ai/status`, `/ai/models`, `/links/money/accounts`, `/links/money/categories`, `/links/calendar/calendars`, `POST /links/calendar/sync`, `/links/contacts?q`, `/links/documents?q`, `/backup` (admin), `/export.json`, `/export.csv`, `POST /import`.
 
+Pocket Move can copy your renewals and their history out and bring them in (`GET /pocket/portable`; link scopes `move:export` / `move:import`). Imports only add; a second run of the same file adds nothing.
+
 ## Pocket Core
 
 Renewals offers `renewals:read` (overview, due, day, search, travel, kinds, holders, renewals, history) and `renewals:write` (`POST /renewals`, `PUT/DELETE /renewals/{id}` and `POST /renewals/{id}/renew` for what that app added). Everything else answers 403 to a link token.
