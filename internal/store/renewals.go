@@ -159,8 +159,20 @@ func (r *Renewal) clean() {
 
 // CreateRenewal adds a renewal.
 func (s *Store) CreateRenewal(ctx context.Context, uid int64, r *Renewal) error {
+	return s.CreateRenewalWith(ctx, uid, r, nil)
+}
+
+// CreateRenewalWith adds a renewal and, when also is given, runs it in the
+// same transaction right after the insert (r.ID is set by then): a capture's
+// receipt is kept with the renewal it made, or neither is.
+func (s *Store) CreateRenewalWith(ctx context.Context, uid int64, r *Renewal, also func(tx *sql.Tx, r *Renewal) error) error {
 	r.clean()
-	res, err := s.DB.ExecContext(ctx, `INSERT INTO renewals (user_id, title, kind, holder, provider, number, issued_on, expires_on, renew_n, renew_unit, auto_renews,
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+	res, err := tx.ExecContext(ctx, `INSERT INTO renewals (user_id, title, kind, holder, provider, number, issued_on, expires_on, renew_n, renew_unit, auto_renews,
 		remind_days, lead_days, cost, currency, renew_url, notes, document_id, document_title, contact_id, contact_name, archived, needs_check, source, source_ref,
 		source_url, found_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		uid, r.Title, r.Kind, r.Holder, r.Provider, r.Number, r.IssuedOn, r.ExpiresOn, r.RenewN, r.RenewUnit, boolInt(r.AutoRenews),
@@ -170,6 +182,14 @@ func (s *Store) CreateRenewal(ctx context.Context, uid int64, r *Renewal) error 
 		return conflict(err)
 	}
 	r.ID, _ = res.LastInsertId()
+	if also != nil {
+		if err := also(tx, r); err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	got, err := s.GetRenewal(ctx, uid, r.ID)
 	if err != nil {
 		return err
@@ -354,6 +374,28 @@ func (s *Store) ListHistory(ctx context.Context, uid, renewalID int64, limit int
 		var h History
 		var tx sql.NullInt64
 		if err := rows.Scan(&h.ID, &h.UserID, &h.RenewalID, &h.RenewedOn, &h.OldExpires, &h.NewExpires, &h.Cost, &h.Currency, &h.Note, &tx, &h.Source, &h.CreatedAt, &h.Title); err != nil {
+			return nil, err
+		}
+		h.MoneyTxID = ptr(tx)
+		out = append(out, h)
+	}
+	return out, rows.Err()
+}
+
+// HistoryOn lists the renewals done on a day, and those whose old date was
+// that day (it ran out then, or was renewed ahead of it), oldest first.
+func (s *Store) HistoryOn(ctx context.Context, uid int64, date string) ([]History, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+historyCols+`, r.holder FROM history h JOIN renewals r ON r.id = h.renewal_id
+		WHERE h.user_id = ? AND (h.renewed_on = ? OR h.old_expires = ?) ORDER BY h.id`, uid, date, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []History{}
+	for rows.Next() {
+		var h History
+		var tx sql.NullInt64
+		if err := rows.Scan(&h.ID, &h.UserID, &h.RenewalID, &h.RenewedOn, &h.OldExpires, &h.NewExpires, &h.Cost, &h.Currency, &h.Note, &tx, &h.Source, &h.CreatedAt, &h.Title, &h.Holder); err != nil {
 			return nil, err
 		}
 		h.MoneyTxID = ptr(tx)

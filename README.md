@@ -68,6 +68,8 @@ Set `CORE_URL` and `CORE_REGISTRATION_KEY` and Renewals joins the box: people si
 
 Other apps can read your renewals (`renewals:read`: Pocket AI's briefing, Pocket Day's journal) or add and renew them (`renewals:write`). Events on the bus: `renewals.added`, `renewals.found`, `renewals.due`, `renewals.expired`, `renewals.renewed`. Without Core every connection can be made directly with a URL and a token; the Core-only choices stay visible, greyed out.
 
+Pocket Search and Pocket Hub find Renewals on their own, with nothing to set up in either: your renewals turn up in Search (`!renewals passport`, `!renew`, `!expires`), Hub shows a "Renewals" widget with what has run out and what runs out in the next 60 days, and a quick line typed in Hub becomes a renewal ("Domain bjelke.org 2027-03-01"). The day is offered the same way (Pocket Day keeps its own Renewals reading through `renewals:read` for now). These read only what Renewals already keeps, the dates found in your other apps included. The routes are in [docs/api.md](docs/api.md#pocket-search-pocket-day-and-pocket-hub).
+
 ## Build
 
 Go 1.26 and Node 22. `make` builds the web UI and the binary, `make test` runs vet, the Go tests and the TypeScript check, `make run` starts it with example data. Releases for Linux (amd64, arm64, armv7), macOS, Windows and FreeBSD, and a multi-arch image on ghcr.io.

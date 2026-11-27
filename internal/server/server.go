@@ -220,11 +220,12 @@ func (s *Server) registerWithCore(ctx context.Context) error {
 		Slug: "renewals", Name: "Pocket Renewals",
 		Description: "Everything that runs out, in one list: passports, ID cards and driving licences, insurance, vehicle registration, warranties, domains, TLS certificates, subscriptions and contracts. Reminders well before each date, the history of every renewal, and dates found by themselves in your documents and your other Pocket apps.",
 		Icon:        "/favicon.svg", Version: Version,
-		URL: s.cfg.CoreAppURL, PublicURL: s.cfg.BaseURL, HealthPath: "/healthz", EnvPrefix: "RENEWALS",
-		Publishes: eventTopics,
-		Offers:    linkOffers,
-		Uses:      append(linkUses(), core.InferenceUse()),
-		Portable:  portable,
+		URL: s.cfg.CoreAppURL, PublicURL: s.cfg.BaseURL, HealthPath: "/healthz", EnvPrefix: "RENEWALS", Category: "Money",
+		Publishes:    eventTopics,
+		Offers:       linkOffers,
+		Uses:         append(linkUses(), core.InferenceUse()),
+		Portable:     portable,
+		Capabilities: capabilities,
 	}
 	if s.cfg.BaseURL != "" {
 		m.OIDC = &core.OIDCRequest{RedirectURIs: []string{s.oidcCallbackURL()}}

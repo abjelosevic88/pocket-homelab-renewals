@@ -83,7 +83,8 @@ type History struct {
 	Source     string `json:"source"`
 	CreatedAt  string `json:"created_at"`
 
-	Title string `json:"title,omitempty"`
+	Title  string `json:"title,omitempty"`
+	Holder string `json:"holder,omitempty"` // HistoryOn only
 }
 
 // Scan is one look through another app for dates that run out.
